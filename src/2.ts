@@ -25,7 +25,7 @@ const matchesSchema = z.array(matchSchema);
 // -- Constants
 const SHAPE_NAMES = {
   ROCK: "ROCK",
-  PAPER: "ROCK",
+  PAPER: "PAPER",
   SCISSORS: "SCISSORS",
 } as const;
 
@@ -41,16 +41,16 @@ const MY_SHAPES = {
   Z: SHAPE_NAMES.SCISSORS,
 } as const;
 
-const SHAPE_RULES = {
-  ROCK: {
+const shapes = {
+  [SHAPE_NAMES.ROCK]: {
     VALUE: 1,
     INFERIOR_SHAPE: SHAPE_NAMES.SCISSORS,
   },
-  PAPER: {
+  [SHAPE_NAMES.PAPER]: {
     VALUE: 2,
     INFERIOR_SHAPE: SHAPE_NAMES.ROCK,
   },
-  SCISSORS: {
+  [SHAPE_NAMES.SCISSORS]: {
     VALUE: 3,
     INFERIOR_SHAPE: SHAPE_NAMES.PAPER,
   },
@@ -75,17 +75,17 @@ export function getTotalScore(strategyGuide: string) {
     const myShape = MY_SHAPES[myPlay];
 
     if (opponentShape === myShape) {
-      totalScore += SHAPE_RULES[myShape].VALUE + OUTCOMES.DRAW;
+      totalScore += shapes[myShape].VALUE + OUTCOMES.DRAW;
       continue;
     }
 
-    if (SHAPE_RULES[opponentShape].INFERIOR_SHAPE === myShape) {
-      totalScore += SHAPE_RULES[myShape].VALUE + OUTCOMES.LOSE;
+    if (shapes[opponentShape].INFERIOR_SHAPE === myShape) {
+      totalScore += shapes[myShape].VALUE + OUTCOMES.LOSE;
       continue;
     }
 
-    if (SHAPE_RULES[myShape].INFERIOR_SHAPE === opponentShape) {
-      totalScore += SHAPE_RULES[myShape].VALUE + OUTCOMES.WIN;
+    if (shapes[myShape].INFERIOR_SHAPE === opponentShape) {
+      totalScore += shapes[myShape].VALUE + OUTCOMES.WIN;
       continue;
     }
   }
