@@ -41,7 +41,7 @@ const MY_SHAPES = {
   Z: SHAPE_NAMES.SCISSORS,
 } as const;
 
-const shapes = {
+const SHAPES = {
   [SHAPE_NAMES.ROCK]: {
     VALUE: 1,
     INFERIOR_SHAPE: SHAPE_NAMES.SCISSORS,
@@ -75,17 +75,17 @@ export function getTotalScore(strategyGuide: string) {
     const myShape = MY_SHAPES[myPlay];
 
     if (opponentShape === myShape) {
-      totalScore += shapes[myShape].VALUE + OUTCOMES.DRAW;
+      totalScore += SHAPES[myShape].VALUE + OUTCOMES.DRAW;
       continue;
     }
 
-    if (shapes[opponentShape].INFERIOR_SHAPE === myShape) {
-      totalScore += shapes[myShape].VALUE + OUTCOMES.LOSE;
+    if (SHAPES[opponentShape].INFERIOR_SHAPE === myShape) {
+      totalScore += SHAPES[myShape].VALUE + OUTCOMES.LOSE;
       continue;
     }
 
-    if (shapes[myShape].INFERIOR_SHAPE === opponentShape) {
-      totalScore += shapes[myShape].VALUE + OUTCOMES.WIN;
+    if (SHAPES[myShape].INFERIOR_SHAPE === opponentShape) {
+      totalScore += SHAPES[myShape].VALUE + OUTCOMES.WIN;
       continue;
     }
   }
