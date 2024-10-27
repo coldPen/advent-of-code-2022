@@ -3,10 +3,7 @@ import * as path from "path";
 import { getMatches } from "./getMatches";
 import { FIRST_LETTER, OUTCOME_VALUE, SHAPE_DESCRIPTION } from "./constants";
 
-const input = fs.readFileSync(
-  path.resolve(__dirname, "../../data/2.txt"),
-  "utf-8"
-);
+const input = fs.readFileSync(path.resolve(__dirname, "data.txt"), "utf-8");
 
 function getTotalScoreWithTheRightInstructions(strategyGuide: string) {
   const matches = getMatches(strategyGuide);

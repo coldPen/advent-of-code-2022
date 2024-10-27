@@ -8,10 +8,7 @@ import {
   SHAPE_DESCRIPTION,
 } from "./constants";
 
-const input = fs.readFileSync(
-  path.resolve(__dirname, "../../data/2.txt"),
-  "utf-8"
-);
+const input = fs.readFileSync(path.resolve(__dirname, "data.txt"), "utf-8");
 
 export function getTotalScoreWithTheWrongInstructions(strategyGuide: string) {
   const matches = getMatches(strategyGuide);
