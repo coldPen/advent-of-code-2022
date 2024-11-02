@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import {} from "./1A";
 import { getAllAmounts } from "./getAllAmounts";
 
 const input = fs.readFileSync(path.resolve(__dirname, "data.txt"), "utf-8");
