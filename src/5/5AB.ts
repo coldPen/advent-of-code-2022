@@ -6,7 +6,7 @@ const input = fs.readFileSync(path.resolve(__dirname, "data.txt"), "utf-8");
 const crateIdRegEx = /[A-Z]/;
 const instructionRegEx = /move\s+(\d+)\s+from\s+(\d+)\s+to\s+(\d+)/;
 
-function getNewTopCrates(input: string) {
+function getNewTopCrates(input: string, crateMover: "9000" | "9001" = "9000") {
   const [stacksRawString, procedureRawString] = input.split(/\n\s*\n/);
 
   const stacks = parseStacks(stacksRawString);
@@ -14,7 +14,12 @@ function getNewTopCrates(input: string) {
   const procedure = parseProcedure(procedureRawString);
 
   for (const { amount, from, to } of procedure) {
-    const cratesToMove = stacks[from - 1].splice(-amount).reverse();
+    const cratesToMove = stacks[from - 1].splice(-amount);
+
+    if (crateMover === "9000") {
+      cratesToMove.reverse();
+    }
+
     stacks[to - 1].push(...cratesToMove);
   }
 
