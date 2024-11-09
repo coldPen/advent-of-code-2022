@@ -4,12 +4,13 @@ import * as path from "path";
 const input = fs.readFileSync(path.resolve(__dirname, "data.txt"), "utf-8");
 
 type Filesystem = { [k: string]: number | Filesystem };
+// type Filesystem = Array<[string, number | Filesystem]>;
 
 function getSumOfDeletableDirectories(terminalOutput: string) {
   const root = getFilesystem(terminalOutput);
-
-  let sum = 0;
-  for (let i = 0; i < Object.entries(root).length; i++) {}
+  return root;
+  // let sum = 0;
+  // for (let i = 0; i < Object.entries(root).length; i++) {}
 }
 
 console.log(getSumOfDeletableDirectories(input));
