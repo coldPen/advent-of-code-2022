@@ -1,37 +1,64 @@
 import * as fs from "fs";
 import * as path from "path";
+import { z } from "zod";
 
 const input = fs.readFileSync(path.resolve(__dirname, "data.txt"), "utf-8");
 
-type Filesystem = { [k: string]: number | Filesystem };
-// type Filesystem = Array<[string, number | Filesystem]>;
+type Directories = Array<{
+  path: string;
+  size: number;
+}>;
 
-function getSumOfDeletableDirectories(terminalOutput: string) {
-  const root = getFilesystem(terminalOutput);
-  return root;
-  // let sum = 0;
-  // for (let i = 0; i < Object.entries(root).length; i++) {}
+const pathArraySchema = z.tuple([z.literal("/")]).rest(z.string());
+type PathArray = z.infer<typeof pathArraySchema>;
+
+const totalDiskSpace = 70_000_000;
+const requiredFreeSpace = 30_000_000;
+
+const directories = getDirectories(input);
+function getSumOfDeletableDirectories(directories: Directories) {
+  let sum = 0;
+  for (const { size } of directories) {
+    if (size <= 100000) {
+      sum += size;
+    }
+  }
+
+  return sum;
 }
+console.log(getSumOfDeletableDirectories(directories));
 
-console.log(getSumOfDeletableDirectories(input));
+function getSizeOfSmallestDeletableDirectory(directories: Directories) {
+  const rootDirectory = directories.find(({ path }) => path === "/");
+  if (rootDirectory === undefined) throw new Error("No root directory found");
 
-function getFilesystem(terminalOutput: string) {
+  const freeSpace = totalDiskSpace - rootDirectory.size;
+
+  if (freeSpace >= requiredFreeSpace) return null;
+
+  const neededAdditionalFreeSpace = requiredFreeSpace - freeSpace;
+
+  let sizeOfSmallestDeletableDirectory = Infinity;
+  for (const { size } of directories) {
+    if (
+      size >= neededAdditionalFreeSpace &&
+      size < sizeOfSmallestDeletableDirectory
+    ) {
+      sizeOfSmallestDeletableDirectory = size;
+    }
+  }
+
+  if (sizeOfSmallestDeletableDirectory === Infinity) return null;
+
+  return sizeOfSmallestDeletableDirectory;
+}
+console.log(getSizeOfSmallestDeletableDirectory(directories));
+
+function getDirectories(terminalOutput: string) {
   const lines = terminalOutput.split(/\n/);
 
-  const root: Filesystem = {};
-  let currentDirectoryPath: Array<string> = [];
-
-  function getValueByPath(path: string[]) {
-    if (path.length === 0) return root;
-
-    let directory = root;
-    for (let i = 0; i < path.length; i++) {
-      const currentDirectory = directory[path[i]];
-      if (typeof currentDirectory !== "number") directory = currentDirectory;
-      if (directory === undefined) break;
-    }
-    return directory;
-  }
+  const directories: Directories = [];
+  let currentDirectoryPathArray: PathArray = ["/"];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -43,49 +70,67 @@ function getFilesystem(terminalOutput: string) {
           const directoryName = line.slice(5);
 
           if (directoryName === "..") {
-            currentDirectoryPath.pop();
+            currentDirectoryPathArray.pop();
             break;
+          }
+
+          const currentDirectoryPath = getStringPath(currentDirectoryPathArray);
+
+          const currentDirectory = directories.find(
+            (directory) => directory.path === currentDirectoryPath
+          );
+
+          if (currentDirectory === undefined) {
+            directories.push({
+              path: currentDirectoryPath,
+              size: 0,
+            });
           }
 
           if (directoryName === "/") {
-            currentDirectoryPath.length = 0;
+            currentDirectoryPathArray.length = 1; // ["/"]
             break;
           }
 
-          currentDirectoryPath.push(directoryName);
-
-          let targetDirectory = getValueByPath(currentDirectoryPath);
-          if (typeof targetDirectory === "number")
-            throw new Error(`"${targetDirectory}" is a file, not a directory`);
-
-          if (targetDirectory === undefined) targetDirectory = {};
+          currentDirectoryPathArray.push(directoryName);
 
           break;
         }
 
         case "ls": {
-          let targetDirectory = getValueByPath(currentDirectoryPath);
-          if (targetDirectory === undefined) {
-            throw new Error("Can't ls from undefined directory");
-          }
-          if (typeof targetDirectory === "number") {
-            throw new Error("Can't ls from file");
-          }
-
           const remainingLines = lines.slice(i + 1);
           for (let j = 0; j < remainingLines.length; j++) {
             const postLSLine = remainingLines[j];
 
             if (postLSLine.startsWith("$ ")) break;
 
-            const [value, key] = postLSLine.split(/\s/);
+            const [value, name] = postLSLine.split(/\s/);
 
             if (value === "dir") {
-              if (targetDirectory[key] === undefined) {
-                targetDirectory[key] = {};
+              const path = getStringPath(
+                pathArraySchema.parse([...currentDirectoryPathArray, name])
+              );
+              if (!directories.find((directory) => directory.path === path)) {
+                directories.push({ path, size: 0 });
               }
             } else {
-              targetDirectory[key] = parseInt(value);
+              for (let i = 0; i < currentDirectoryPathArray.length; i++) {
+                const targetPath = getStringPath(
+                  pathArraySchema.parse(
+                    currentDirectoryPathArray.slice(0, i + 1)
+                  )
+                );
+
+                const targetDirectory = directories.find(
+                  (directory) => directory.path === targetPath
+                );
+
+                if (targetDirectory === undefined) {
+                  throw new Error(`Can't find directory "${targetPath}"`);
+                }
+
+                targetDirectory.size += parseInt(value);
+              }
             }
           }
 
@@ -98,5 +143,8 @@ function getFilesystem(terminalOutput: string) {
     }
   }
 
-  return root;
+  return directories;
+}
+function getStringPath(pathArray: PathArray): string {
+  return pathArray[0] + pathArray.slice(1).join("/");
 }
